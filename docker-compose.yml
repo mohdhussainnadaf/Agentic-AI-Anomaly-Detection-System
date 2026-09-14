@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  api_gateway:
+    build:
+      context: .
+      dockerfile: services/api_gateway/Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - inference_engine
+      - feedback_service
+
+  inference_engine:
+    build:
+      context: .
+      dockerfile: services/inference_engine/Dockerfile
+    ports:
+      - "8002:8002"
+
+  feedback_service:
+    build:
+      context: .
+      dockerfile: services/feedback_service/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGO_URI=mongodb://mongo_db:27017
+    depends_on:
+      - mongo_db
+
+  mcp_agent:
+    build:
+      context: .
+      dockerfile: services/mcp_agent/Dockerfile
+    environment:
+      - MONGO_URI=mongodb://mongo_db:27017
+    depends_on:
+      - feedback_service
+
+  mongo_db:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
